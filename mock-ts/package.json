@@ -1,0 +1,23 @@
+{
+  "name": "mock-ts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript Mock Runtime CLI (stdio/tcp) speaking JSON-over-lines protocol",
+  "bin": {
+    "mock-ts": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "start": "node dist/cli.js",
+    "dev": "ts-node src/cli.ts --stdio"
+  },
+  "type": "commonjs",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.4.0"
+  }
+}

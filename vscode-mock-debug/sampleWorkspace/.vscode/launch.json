@@ -1,0 +1,52 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "mock",
+			"request": "launch",
+			"name": "Debug readme.md (C#)",
+			"program": "${workspaceFolder}/readme.md",
+			"runtimeExe": "../../mock-csharp/MockRuntime.Cli/bin/Debug/net8.0/MockRuntime.Cli",
+			"runtimeArgs": [],
+			"runtimeCwd": "${workspaceFolder}",
+			"stopOnEntry": true,
+			"trace": false
+		},
+
+		{
+			"type": "mock",
+			"request": "launch",
+			"name": "Debug readme.md (TS)",
+			"program": "${workspaceFolder}/readme.md",
+			"runtimeExe": "node",
+			"runtimeArgs": ["../../mock-ts/dist/cli.js"],
+			"runtimeCwd": "${workspaceFolder}",
+			"stopOnEntry": true,
+			"trace": false
+		},
+		{
+			"type": "mock",
+			"request": "launch",
+			"name": "Debug readme.md (Go)",
+			"program": "${workspaceFolder}/readme.md",
+			"runtimeExe": "../../mock-go/mock-go",
+			"runtimeArgs": [],
+			"runtimeCwd": "${workspaceFolder}",
+			"stopOnEntry": true,
+			"trace": false
+		},
+		{
+			"type": "mock",
+			"request": "attach",
+			"name": "Attach to Mock (TCP)",
+			"program": "${workspaceFolder}/readme.md",
+			"host": "127.0.0.1",
+			"port": 4711,
+			"stopOnAttach": true,
+			"trace": false
+		}
+	]
+}

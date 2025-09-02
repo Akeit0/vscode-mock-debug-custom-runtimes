@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="MockRuntime.Cli\MockRuntime.Cli.csproj" />
+  <Project Path="MockRuntime.Core\MockRuntime.Core.csproj" Type="Classic C#" />
+  <Project Path="MockRuntime.Protocols\MockRuntime.Protocols.csproj" Type="Classic C#" />
+</Solution>
