@@ -41,12 +41,12 @@ interface ILaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	noDebug?: boolean;
 	/** if specified, results in a simulated compile error in launch. */
 	compileError?: 'default' | 'show' | 'hide';
-    /** path to runtime executable. If provided, adapter will spawn this directly. */
-    runtimeExe?: string;
-    /** arguments for the runtime executable. */
-    runtimeArgs?: string[];
-    /** working directory for the runtime executable. */
-    runtimeCwd?: string;
+	/** path to runtime executable. If provided, adapter will spawn this directly. */
+	runtimeExe?: string;
+	/** arguments for the runtime executable. */
+	runtimeArgs?: string[];
+	/** working directory for the runtime executable. */
+	runtimeCwd?: string;
 }
 
 interface IAttachRequestArguments extends ILaunchRequestArguments { }
@@ -58,8 +58,8 @@ export class MockDebugSession extends LoggingDebugSession {
 	private static threadID = 1;
 
 	// a Mock runtime (or debugger)
-    private _runtime: RuntimeLike;
-    private _fileAccessor: FileAccessor;
+	private _runtime: RuntimeLike;
+	private _fileAccessor: FileAccessor;
 
 	private _variableHandles = new Handles<'locals' | 'globals' | RuntimeVariable>();
 
@@ -80,22 +80,22 @@ export class MockDebugSession extends LoggingDebugSession {
 	// cache exception filters across runtime rebinds
 	private _exceptionFilterCache: { namedException?: string; otherExceptions: boolean } | undefined;
 
-    // cache breakpoints per file so we can reapply when recreating runtime
-    private _bpCache = new Map<string, number[]>();
+	// cache breakpoints per file so we can reapply when recreating runtime
+	private _bpCache = new Map<string, number[]>();
 
 	/**
 	 * Creates a new debug adapter that is used for one debug session.
 	 * We configure the default implementation of a debug adapter here.
 	 */
-    public constructor(fileAccessor: FileAccessor) {
+	public constructor(fileAccessor: FileAccessor) {
 		super("mock-debug.txt");
 
 		// this debugger uses zero-based lines and columns
 		this.setDebuggerLinesStartAt1(false);
 		this.setDebuggerColumnsStartAt1(false);
 
-        this._fileAccessor = fileAccessor;
-        this._runtime = createRuntime(fileAccessor);
+		this._fileAccessor = fileAccessor;
+		this._runtime = createRuntime(fileAccessor);
 
 		// setup event handlers
 		this._runtime.on('stopOnEntry', () => {
@@ -126,7 +126,7 @@ export class MockDebugSession extends LoggingDebugSession {
 		this._runtime.on('output', (type, text, filePath, line, column) => {
 
 			let category: string;
-			switch(type) {
+			switch (type) {
 				case 'prio': category = 'important'; break;
 				case 'out': category = 'stdout'; break;
 				case 'err': category = 'stderr'; break;
@@ -153,46 +153,46 @@ export class MockDebugSession extends LoggingDebugSession {
 		});
 	}
 
-    private bindRuntime(runtime: RuntimeLike) {
-        // remove listeners from previous runtime if any (best-effort)
-        try { (this._runtime as any).removeAllListeners?.(); } catch {}
-        this._runtime = runtime;
-        this._runtime.on('stopOnEntry', () => this.sendEvent(new StoppedEvent('entry', MockDebugSession.threadID)));
-        this._runtime.on('stopOnStep', () => this.sendEvent(new StoppedEvent('step', MockDebugSession.threadID)));
-        this._runtime.on('stopOnBreakpoint', () => this.sendEvent(new StoppedEvent('breakpoint', MockDebugSession.threadID)));
-        this._runtime.on('stopOnDataBreakpoint', () => this.sendEvent(new StoppedEvent('data breakpoint', MockDebugSession.threadID)));
-        this._runtime.on('stopOnInstructionBreakpoint', () => this.sendEvent(new StoppedEvent('instruction breakpoint', MockDebugSession.threadID)));
-        this._runtime.on('stopOnException', (exception) => {
-            if (exception) {
-                this.sendEvent(new StoppedEvent(`exception(${exception})`, MockDebugSession.threadID));
-            } else {
-                this.sendEvent(new StoppedEvent('exception', MockDebugSession.threadID));
-            }
-        });
-        this._runtime.on('breakpointValidated', (bp: IRuntimeBreakpoint) => {
-            this.sendEvent(new BreakpointEvent('changed', { verified: bp.verified, id: bp.id } as DebugProtocol.Breakpoint));
-        });
-        this._runtime.on('output', (type, text, filePath, line, column) => {
-            let category: string;
-            switch(type) {
-                case 'prio': category = 'important'; break;
-                case 'out': category = 'stdout'; break;
-                case 'err': category = 'stderr'; break;
-                default: category = 'console'; break;
-            }
-            const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`, category);
-            if (text === 'start' || text === 'startCollapsed' || text === 'end') {
-                e.body.group = text;
-                e.body.output = `group-${text}\n`;
-            }
-            e.body.source = this.createSource(filePath);
-            e.body.line = this.convertDebuggerLineToClient(line);
-            e.body.column = this.convertDebuggerColumnToClient(column);
-            this.sendEvent(e);
-        });
-        this._runtime.on('end', () => this.sendEvent(new TerminatedEvent()));
-        (this._runtime as any).on?.('variablesChanged', () => this.sendEvent(new InvalidatedEvent(['variables'])));
-    }
+	private bindRuntime(runtime: RuntimeLike) {
+		// remove listeners from previous runtime if any (best-effort)
+		try { (this._runtime as any).removeAllListeners?.(); } catch { }
+		this._runtime = runtime;
+		this._runtime.on('stopOnEntry', () => this.sendEvent(new StoppedEvent('entry', MockDebugSession.threadID)));
+		this._runtime.on('stopOnStep', () => this.sendEvent(new StoppedEvent('step', MockDebugSession.threadID)));
+		this._runtime.on('stopOnBreakpoint', () => this.sendEvent(new StoppedEvent('breakpoint', MockDebugSession.threadID)));
+		this._runtime.on('stopOnDataBreakpoint', () => this.sendEvent(new StoppedEvent('data breakpoint', MockDebugSession.threadID)));
+		this._runtime.on('stopOnInstructionBreakpoint', () => this.sendEvent(new StoppedEvent('instruction breakpoint', MockDebugSession.threadID)));
+		this._runtime.on('stopOnException', (exception) => {
+			if (exception) {
+				this.sendEvent(new StoppedEvent(`exception(${exception})`, MockDebugSession.threadID));
+			} else {
+				this.sendEvent(new StoppedEvent('exception', MockDebugSession.threadID));
+			}
+		});
+		this._runtime.on('breakpointValidated', (bp: IRuntimeBreakpoint) => {
+			this.sendEvent(new BreakpointEvent('changed', { verified: bp.verified, id: bp.id } as DebugProtocol.Breakpoint));
+		});
+		this._runtime.on('output', (type, text, filePath, line, column) => {
+			let category: string;
+			switch (type) {
+				case 'prio': category = 'important'; break;
+				case 'out': category = 'stdout'; break;
+				case 'err': category = 'stderr'; break;
+				default: category = 'console'; break;
+			}
+			const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`, category);
+			if (text === 'start' || text === 'startCollapsed' || text === 'end') {
+				e.body.group = text;
+				e.body.output = `group-${text}\n`;
+			}
+			e.body.source = this.createSource(filePath);
+			e.body.line = this.convertDebuggerLineToClient(line);
+			e.body.column = this.convertDebuggerColumnToClient(column);
+			this.sendEvent(e);
+		});
+		this._runtime.on('end', () => this.sendEvent(new TerminatedEvent()));
+		(this._runtime as any).on?.('variablesChanged', () => this.sendEvent(new InvalidatedEvent(['variables'])));
+	}
 
 	/**
 	 * The 'initialize' request is the first request called by the frontend
@@ -224,7 +224,7 @@ export class MockDebugSession extends LoggingDebugSession {
 
 		// make VS Code support completion in REPL
 		response.body.supportsCompletionsRequest = true;
-		response.body.completionTriggerCharacters = [ ".", "[" ];
+		response.body.completionTriggerCharacters = [".", "["];
 
 		// make VS Code send cancel request
 		response.body.supportsCancelRequest = true;
@@ -299,42 +299,42 @@ export class MockDebugSession extends LoggingDebugSession {
 
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request): void {
 		console.log(`disconnectRequest suspend: ${args.suspendDebuggee}, terminate: ${args.terminateDebuggee}`);
-		try { (this._runtime as any).disconnect?.(); } catch {}
+		try { (this._runtime as any).disconnect?.(); } catch { }
 		this.sendResponse(response);
 	}
 
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: IAttachRequestArguments & { host?: string; port?: number; stopOnAttach?: boolean }) {
 		console.log(`attachRequest ${JSON.stringify(args)}`);
 
-        const host = (args as any).host || '127.0.0.1';
-        const port = Number((args as any).port) || 4711;
-        const stopOnAttach = !!(args as any).stopOnAttach;
+		const host = (args as any).host || '127.0.0.1';
+		const port = Number((args as any).port) || 4711;
+		const stopOnAttach = !!(args as any).stopOnAttach;
 
-        const runtime = createSocketRuntime(this._fileAccessor);
-        this.bindRuntime(runtime);
-        try {
-            // reapply cached exception filters before attach
-            if (this._exceptionFilterCache) {
-                this._runtime.setExceptionsFilters(this._exceptionFilterCache.namedException, this._exceptionFilterCache.otherExceptions);
-            }
-            await (this._runtime as any).attach?.(host, port, stopOnAttach, (args as any).program);
-            // reapply cached breakpoints (single round-trip if supported)
-            for (const [p, lines] of this._bpCache.entries()) {
-                if ((this._runtime as any).setBreakpointsBulk) {
-                    await (this._runtime as any).setBreakpointsBulk(p, lines);
-                } else {
-                    this._runtime.clearBreakpoints(p);
-                    for (const l of lines) { await this._runtime.setBreakPoint(p, l); }
-                }
-            }
-            this.sendResponse(response);
-        } catch (e: any) {
-            this.sendErrorResponse(response, { id: 2001, format: `Attach failed: ${e?.message || e}` });
-        }
-    }
+		const runtime = createSocketRuntime(this._fileAccessor);
+		this.bindRuntime(runtime);
+		try {
+			// reapply cached exception filters before attach
+			if (this._exceptionFilterCache) {
+				this._runtime.setExceptionsFilters(this._exceptionFilterCache.namedException, this._exceptionFilterCache.otherExceptions);
+			}
+			await (this._runtime as any).attach?.(host, port, stopOnAttach, (args as any).program);
+			// reapply cached breakpoints (single round-trip if supported)
+			for (const [p, lines] of this._bpCache.entries()) {
+				if ((this._runtime as any).setBreakpointsBulk) {
+					await (this._runtime as any).setBreakpointsBulk(p, lines);
+				} else {
+					this._runtime.clearBreakpoints(p);
+					for (const l of lines) { await this._runtime.setBreakPoint(p, l); }
+				}
+			}
+			this.sendResponse(response);
+		} catch (e: any) {
+			this.sendErrorResponse(response, { id: 2001, format: `Attach failed: ${e?.message || e}` });
+		}
+	}
 
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: ILaunchRequestArguments) {
-        console.log(`launchRequest ${JSON.stringify(args)}`);
+		console.log(`launchRequest ${JSON.stringify(args)}`);
 		// make sure to 'Stop' the buffered logging if 'trace' is not set
 		logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false);
 
@@ -342,30 +342,30 @@ export class MockDebugSession extends LoggingDebugSession {
 		await this._configurationDone.wait(1000);
 
 		// Recreate runtime with launch options for executable selection
-        const runtime = createRuntime(this._fileAccessor, {
-            runtimeExe: args.runtimeExe,
-            runtimeArgs: args.runtimeArgs,
-            runtimeCwd: args.runtimeCwd,
-        });
-        this.bindRuntime(runtime);
+		const runtime = createRuntime(this._fileAccessor, {
+			runtimeExe: args.runtimeExe,
+			runtimeArgs: args.runtimeArgs,
+			runtimeCwd: args.runtimeCwd,
+		});
+		this.bindRuntime(runtime);
 
-        // reapply cached exception filters before start
-        if (this._exceptionFilterCache) {
-            this._runtime.setExceptionsFilters(this._exceptionFilterCache.namedException, this._exceptionFilterCache.otherExceptions);
-        }
+		// reapply cached exception filters before start
+		if (this._exceptionFilterCache) {
+			this._runtime.setExceptionsFilters(this._exceptionFilterCache.namedException, this._exceptionFilterCache.otherExceptions);
+		}
 
-        // reapply cached breakpoints before start (single round-trip if supported)
-        for (const [p, lines] of this._bpCache.entries()) {
-            if ((this._runtime as any).setBreakpointsBulk) {
-                await (this._runtime as any).setBreakpointsBulk(p, lines);
-            } else {
-                this._runtime.clearBreakpoints(p);
-                for (const l of lines) { await this._runtime.setBreakPoint(p, l); }
-            }
-        }
+		// reapply cached breakpoints before start (single round-trip if supported)
+		for (const [p, lines] of this._bpCache.entries()) {
+			if ((this._runtime as any).setBreakpointsBulk) {
+				await (this._runtime as any).setBreakpointsBulk(p, lines);
+			} else {
+				this._runtime.clearBreakpoints(p);
+				for (const l of lines) { await this._runtime.setBreakPoint(p, l); }
+			}
+		}
 
-        // start the program in the runtime
-        await this._runtime.start(args.program, !!args.stopOnEntry, !args.noDebug);
+		// start the program in the runtime
+		await this._runtime.start(args.program, !!args.stopOnEntry, !args.noDebug);
 
 		if (args.compileError) {
 			// simulate a compile/build error in "launch" request:
@@ -385,52 +385,52 @@ export class MockDebugSession extends LoggingDebugSession {
 		this.sendResponse(response);
 	}
 
-    protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): Promise<void> {
+	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): Promise<void> {
 
-        const path = args.source.path as string;
-        const clientLines = args.lines || [];
+		const path = args.source.path as string;
+		const clientLines = args.lines || [];
 
-        // cache new set (convert to debugger/engine zero-based here)
-        const dbgLines = clientLines.map(l => this.convertClientLineToDebugger(l));
-        this._bpCache.set(path, dbgLines);
+		// cache new set (convert to debugger/engine zero-based here)
+		const dbgLines = clientLines.map(l => this.convertClientLineToDebugger(l));
+		this._bpCache.set(path, dbgLines);
 
-        // Compute 'verified' locally from source contents to avoid transient unverified before runtime load
-        let validLines = new Set<number>();
-        try {
-            const bytes = await this._fileAccessor.readFile(path);
-            const lines = new TextDecoder().decode(bytes).split(/\r?\n/);
-            for (let i = 0; i < lines.length; i++) {
-                if (lines[i].trim().length > 0) validLines.add(i);
-            }
-        } catch { /* ignore, leave set empty */ }
+		// Compute 'verified' locally from source contents to avoid transient unverified before runtime load
+		let validLines = new Set<number>();
+		try {
+			const bytes = await this._fileAccessor.readFile(path);
+			const lines = new TextDecoder().decode(bytes).split(/\r?\n/);
+			for (let i = 0; i < lines.length; i++) {
+				if (lines[i].trim().length > 0) validLines.add(i);
+			}
+		} catch { /* ignore, leave set empty */ }
 
-        let actualBreakpoints: DebugProtocol.Breakpoint[] = [];
-        if ((this._runtime as any).setBreakpointsBulk) {
-            const results = await (this._runtime as any).setBreakpointsBulk(path, dbgLines);
-            actualBreakpoints = (results as any[]).map(r => {
-                const line = Number(r.line);
-                const bp = new Breakpoint(validLines.has(line), this.convertDebuggerLineToClient(line)) as DebugProtocol.Breakpoint;
-                bp.id = Number(r.id);
-                return bp;
-            });
-        } else {
-            // fallback to legacy behavior
-            this._runtime.clearBreakpoints(path);
-            const actualBreakpoints0 = dbgLines.map(async l => {
-                const { line, id } = await this._runtime.setBreakPoint(path, l);
-                const bp = new Breakpoint(validLines.has(line), this.convertDebuggerLineToClient(line)) as DebugProtocol.Breakpoint;
-                bp.id = id;
-                return bp;
-            });
-            actualBreakpoints = await Promise.all<DebugProtocol.Breakpoint>(actualBreakpoints0);
-        }
+		let actualBreakpoints: DebugProtocol.Breakpoint[] = [];
+		if ((this._runtime as any).setBreakpointsBulk) {
+			const results = await (this._runtime as any).setBreakpointsBulk(path, dbgLines);
+			actualBreakpoints = (results as any[]).map(r => {
+				const line = Number(r.line);
+				const bp = new Breakpoint(validLines.has(line), this.convertDebuggerLineToClient(line)) as DebugProtocol.Breakpoint;
+				bp.id = Number(r.id);
+				return bp;
+			});
+		} else {
+			// fallback to legacy behavior
+			this._runtime.clearBreakpoints(path);
+			const actualBreakpoints0 = dbgLines.map(async l => {
+				const { line, id } = await this._runtime.setBreakPoint(path, l);
+				const bp = new Breakpoint(validLines.has(line), this.convertDebuggerLineToClient(line)) as DebugProtocol.Breakpoint;
+				bp.id = id;
+				return bp;
+			});
+			actualBreakpoints = await Promise.all<DebugProtocol.Breakpoint>(actualBreakpoints0);
+		}
 
-        // send back the actual breakpoint positions
-        response.body = {
-            breakpoints: actualBreakpoints
-        };
-        this.sendResponse(response);
-    }
+		// send back the actual breakpoint positions
+		response.body = {
+			breakpoints: actualBreakpoints
+		};
+		this.sendResponse(response);
+	}
 
 	protected breakpointLocationsRequest(response: DebugProtocol.BreakpointLocationsResponse, args: DebugProtocol.BreakpointLocationsArguments, request?: DebugProtocol.Request): void {
 
@@ -619,8 +619,8 @@ export class MockDebugSession extends LoggingDebugSession {
 		const rv = container === 'locals'
 			? this._runtime.getLocalVariable(args.name)
 			: container instanceof RuntimeVariable && container.value instanceof Array
-			? container.value.find(v => v.name === args.name)
-			: undefined;
+				? container.value.find(v => v.name === args.name)
+				: undefined;
 
 		if (rv) {
 			rv.value = this.convertToRuntime(args.value);
@@ -639,15 +639,15 @@ export class MockDebugSession extends LoggingDebugSession {
 		this.sendResponse(response);
 	}
 
-    protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments): void {
-        (this._runtime as any).pause?.();
-        this.sendResponse(response);
-    }
+	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments): void {
+		(this._runtime as any).pause?.();
+		this.sendResponse(response);
+	}
 
 	protected reverseContinueRequest(response: DebugProtocol.ReverseContinueResponse, args: DebugProtocol.ReverseContinueArguments): void {
 		this._runtime.continue(true);
 		this.sendResponse(response);
- 	}
+	}
 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
 		this._runtime.step(args.granularity === 'instruction', false);
@@ -692,7 +692,7 @@ export class MockDebugSession extends LoggingDebugSession {
 				if (matches && matches.length === 2) {
 					const mbp = await this._runtime.setBreakPoint(this._runtime.sourceFile, this.convertClientLineToDebugger(parseInt(matches[1])));
 					const bp = new Breakpoint(mbp.verified, this.convertDebuggerLineToClient(mbp.line), undefined, this.createSource(this._runtime.sourceFile)) as DebugProtocol.Breakpoint;
-					bp.id= mbp.id;
+					bp.id = mbp.id;
 					this.sendEvent(new BreakpointEvent('new', bp));
 					reply = `breakpoint created`;
 				} else {
@@ -701,7 +701,7 @@ export class MockDebugSession extends LoggingDebugSession {
 						const mbp = this._runtime.clearBreakPoint(this._runtime.sourceFile, this.convertClientLineToDebugger(parseInt(matches[1])));
 						if (mbp) {
 							const bp = new Breakpoint(false) as DebugProtocol.Breakpoint;
-							bp.id= mbp.id;
+							bp.id = mbp.id;
 							this.sendEvent(new BreakpointEvent('removed', bp));
 							reply = `breakpoint deleted`;
 						}
@@ -717,22 +717,22 @@ export class MockDebugSession extends LoggingDebugSession {
 						}
 					}
 				}
-				// fall through
+			// fall through
 
 			default:
 				if (args.expression.startsWith('$')) {
 					// set local variable if expression is assign statement
-					 if (args.expression.indexOf('=') > 0) {
-						 const name = args.expression.substr(1, args.expression.indexOf('=') - 1).trim();
-						 const value = this.convertToRuntime(args.expression.substr(args.expression.indexOf('=') + 1).trim());
-						 rv = this._runtime.getLocalVariable(name);
-						 if (rv) {
-							 rv.value = value;
-							 // Persist to C# runtime if supported
-							 (this._runtime as any).setLocalVariable?.(name, value);
-						 }
+					if (args.expression.indexOf('=') > 0) {
+						const name = args.expression.substring(1, args.expression.indexOf('=') ).trim();
+						rv = this._runtime.getLocalVariable(name);
+						if (rv) {
+							const value = this.convertToRuntime(args.expression.substring(args.expression.indexOf('=') + 1).trim());
+							rv.value = value;
+							// Persist to C# runtime if supported
+							(this._runtime as any).setLocalVariable?.(name, value);
+						}
 					} else {
-						rv = this._runtime.getLocalVariable(args.expression.substr(1));
+						rv = this._runtime.getLocalVariable(args.expression.substring(1));
 					}
 				} else {
 					rv = new RuntimeVariable('eval', this.convertToRuntime(args.expression));
@@ -760,27 +760,27 @@ export class MockDebugSession extends LoggingDebugSession {
 
 	protected setExpressionRequest(response: DebugProtocol.SetExpressionResponse, args: DebugProtocol.SetExpressionArguments): void {
 
-    if (args.expression.startsWith('$')) {
-            const name = args.expression.substr(1);
-            const rv = this._runtime.getLocalVariable(name);
-            if (rv) {
-                const value = this.convertToRuntime(args.value);
-                rv.value = value;
-                // Persist to C# runtime if supported
-                (this._runtime as any).setLocalVariable?.(name, value);
-                response.body = this.convertFromRuntime(rv);
-                this.sendResponse(response);
-                // Ensure Variables view refreshes (other variables may change)
-                this.sendEvent(new InvalidatedEvent(['variables']));
-            } else {
-                this.sendErrorResponse(response, {
-                    id: 1002,
-                    format: `variable '{lexpr}' not found`,
-                    variables: { lexpr: args.expression },
-                    showUser: true
-                });
-            }
-        } else {
+		if (args.expression.startsWith('$')) {
+			const name = args.expression.substr(1);
+			const rv = this._runtime.getLocalVariable(name);
+			if (rv) {
+				const value = this.convertToRuntime(args.value);
+				rv.value = value;
+				// Persist to C# runtime if supported
+				(this._runtime as any).setLocalVariable?.(name, value);
+				response.body = this.convertFromRuntime(rv);
+				this.sendResponse(response);
+				// Ensure Variables view refreshes (other variables may change)
+				this.sendEvent(new InvalidatedEvent(['variables']));
+			} else {
+				this.sendErrorResponse(response, {
+					id: 1002,
+					format: `variable '{lexpr}' not found`,
+					variables: { lexpr: args.expression },
+					showUser: true
+				});
+			}
+		} else {
 			this.sendErrorResponse(response, {
 				id: 1003,
 				format: `'{lexpr}' not an assignable expression`,
@@ -824,18 +824,18 @@ export class MockDebugSession extends LoggingDebugSession {
 	protected dataBreakpointInfoRequest(response: DebugProtocol.DataBreakpointInfoResponse, args: DebugProtocol.DataBreakpointInfoArguments): void {
 
 		response.body = {
-            dataId: null,
-            description: "cannot break on data access",
-            accessTypes: undefined,
-            canPersist: false
-        };
+			dataId: null,
+			description: "cannot break on data access",
+			accessTypes: undefined,
+			canPersist: false
+		};
 
 		if (args.variablesReference && args.name) {
 			const v = this._variableHandles.get(args.variablesReference);
 			if (v === 'globals') {
 				response.body.dataId = args.name;
 				response.body.description = args.name;
-				response.body.accessTypes = [ "write" ];
+				response.body.accessTypes = ["write"];
 				response.body.canPersist = true;
 			} else {
 				response.body.dataId = args.name;
@@ -906,7 +906,7 @@ export class MockDebugSession extends LoggingDebugSession {
 			this._cancellationTokens.set(args.requestId, true);
 		}
 		if (args.progressId) {
-			this._cancelledProgressId= args.progressId;
+			this._cancelledProgressId = args.progressId;
 		}
 	}
 
@@ -917,16 +917,16 @@ export class MockDebugSession extends LoggingDebugSession {
 		const count = args.instructionCount;
 
 		const isHex = memoryInt.startsWith('0x');
-		const pad = isHex ? memoryInt.length-2 : memoryInt.length;
+		const pad = isHex ? memoryInt.length - 2 : memoryInt.length;
 
 		const loc = this.createSource(this._runtime.sourceFile);
 
 		let lastLine = -1;
 
-		const instructions = this._runtime.disassemble(baseAddress+offset, count).map(instruction => {
+		const instructions = this._runtime.disassemble(baseAddress + offset, count).map(instruction => {
 			let address = Math.abs(instruction.address).toString(isHex ? 16 : 10).padStart(pad, '0');
 			const sign = instruction.address < 0 ? '-' : '';
-			const instr : DebugProtocol.DisassembledInstruction = {
+			const instr: DebugProtocol.DisassembledInstruction = {
 				address: sign + (isHex ? `0x${address}` : `${address}`),
 				instruction: instruction.instruction
 			};
@@ -967,9 +967,9 @@ export class MockDebugSession extends LoggingDebugSession {
 
 	protected customRequest(command: string, response: DebugProtocol.Response, args: any) {
 		if (command === 'toggleFormatting') {
-			this._valuesInHex = ! this._valuesInHex;
+			this._valuesInHex = !this._valuesInHex;
 			if (this._useInvalidatedEvent) {
-				this.sendEvent(new InvalidatedEvent( ['variables'] ));
+				this.sendEvent(new InvalidatedEvent(['variables']));
 			}
 			this.sendResponse(response);
 		} else {
@@ -981,7 +981,7 @@ export class MockDebugSession extends LoggingDebugSession {
 
 	private convertToRuntime(value: string): IRuntimeVariableType {
 
-		value= value.trim();
+		value = value.trim();
 
 		if (value === 'true') {
 			return true;
@@ -990,7 +990,7 @@ export class MockDebugSession extends LoggingDebugSession {
 			return false;
 		}
 		if (value[0] === '\'' || value[0] === '"') {
-			return value.substr(1, value.length-2);
+			return value.substr(1, value.length - 2);
 		}
 		const n = parseFloat(value);
 		if (!isNaN(n)) {
@@ -1013,7 +1013,7 @@ export class MockDebugSession extends LoggingDebugSession {
 			// a "lazy" variable needs an additional click to retrieve its value
 
 			dapVariable.value = 'lazy var';		// placeholder value
-			v.reference ??= this._variableHandles.create(new RuntimeVariable('', [ new RuntimeVariable('', v.value) ]));
+			v.reference ??= this._variableHandles.create(new RuntimeVariable('', [new RuntimeVariable('', v.value)]));
 			dapVariable.variablesReference = v.reference;
 			dapVariable.presentationHint = { lazy: true };
 		} else {
