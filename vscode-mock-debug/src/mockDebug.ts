@@ -721,7 +721,19 @@ export class MockDebugSession extends LoggingDebugSession {
 
 			default:
 				if (args.expression.startsWith('$')) {
-					rv = this._runtime.getLocalVariable(args.expression.substr(1));
+					// set local variable if expression is assign statement
+					 if (args.expression.indexOf('=') > 0) {
+						 const name = args.expression.substr(1, args.expression.indexOf('=') - 1).trim();
+						 const value = this.convertToRuntime(args.expression.substr(args.expression.indexOf('=') + 1).trim());
+						 rv = this._runtime.getLocalVariable(name);
+						 if (rv) {
+							 rv.value = value;
+							 // Persist to C# runtime if supported
+							 (this._runtime as any).setLocalVariable?.(name, value);
+						 }
+					} else {
+						rv = this._runtime.getLocalVariable(args.expression.substr(1));
+					}
 				} else {
 					rv = new RuntimeVariable('eval', this.convertToRuntime(args.expression));
 				}
